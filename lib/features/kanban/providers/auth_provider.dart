@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanban_board/features/kanban/providers/kanban_provider.dart';
-import '../../core/services/firebase_service.dart';
+import '../../../core/services/firebase_service.dart';
 import '../controllers/auth_controller.dart';
 
 final authControllerProvider = Provider((ref) {

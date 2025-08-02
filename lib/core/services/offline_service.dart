@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 import '../config/constants.dart';
 import '../models/task_model.dart';
 import 'dart:io';
@@ -49,8 +50,8 @@ class OfflineService {
       'tasks',
       {
         ...task.toJson(),
-        'isSynced': 0,
-        'pendingAction': action ?? 'add',
+        'isSynced': task.isSynced ? 1 : 0,
+        'pendingAction': action ?? task.pendingAction ?? 'add',
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -90,7 +91,7 @@ class OfflineService {
     final db = await database;
     await db.update(
       'tasks',
-      {'isSynced': 1},
+      {'isSynced': 1, 'pendingAction': null},
       where: 'id = ?',
       whereArgs: [taskId],
     );

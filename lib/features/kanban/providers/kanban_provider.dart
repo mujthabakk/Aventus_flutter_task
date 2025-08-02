@@ -1,12 +1,14 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kanban_board/features/core/services/firebase_service.dart';
-import '../../../core/services/firebase_service.dart';
-import '../../../core/services/offline_service.dart';
-import '../../../core/services/storage_service.dart';
-import '../../../core/models/task_model.dart';
-import '../controllers/kanban_controller.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:kanban_board/core/models/task_model.dart';
+import 'package:kanban_board/core/services/firebase_service.dart';
+import 'package:kanban_board/core/services/offline_service.dart';
+import 'package:kanban_board/core/services/storage_service.dart';
+import 'package:kanban_board/features/kanban/controllers/kanban_controller.dart';
+import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart';
+
+part 'kanban_provider.g.dart';
 
 final firebaseServiceProvider = Provider((ref) => FirebaseService());
 final offlineServiceProvider = Provider((ref) => OfflineService());
@@ -21,47 +23,48 @@ final kanbanControllerProvider = Provider((ref) {
   );
 });
 
-final tasksProvider =
-    StateNotifierProvider<TasksNotifier, List<TaskModel>>((ref) {
-  return TasksNotifier(ref);
-});
+@riverpod
+class TasksController extends _$TasksController {
+  @override
+  FutureOr<List<TaskModel>> build() async {
+    final firebaseService = ref.read(firebaseServiceProvider);
+    final offlineService = ref.read(offlineServiceProvider);
 
-class TasksNotifier extends StateNotifier<List<TaskModel>> {
-  final Ref _ref;
-
-  TasksNotifier(this._ref) : super([]) {
-    _init();
-  }
-
-  Future<void> _init() async {
-    final firebaseService = _ref.read(firebaseServiceProvider);
-    final offlineService = _ref.read(offlineServiceProvider);
+    // Listen to Firebase task stream and update state
     firebaseService.getTasks().listen((tasks) {
-      state = tasks;
+      state = AsyncData(tasks);
+      // Sync local tasks with Firebase
+      ref.read(kanbanControllerProvider).syncTasks();
     });
+
+    // Fetch local tasks and merge with Firebase tasks
     final localTasks = await offlineService.getLocalTasks();
-    state = [
-      ...state,
-      ...localTasks.where((t) => !state.any((s) => s.id == t.id))
+    final firebaseTasks = state.valueOrNull ?? [];
+    return [
+      ...firebaseTasks,
+      ...localTasks.where((t) => !firebaseTasks.any((s) => s.id == t.id)),
     ];
   }
 
-  void addTask(TaskModel task) {
-    state = [...state, task];
-    _ref.read(kanbanControllerProvider).addTask(task);
+  Future<void> addTask(TaskModel task) async {
+    state = AsyncData([...state.valueOrNull ?? [], task]);
+    await ref.read(kanbanControllerProvider).addTask(task);
   }
 
-  void updateTask(TaskModel task) {
-    state = state.map((t) => t.id == task.id ? task : t).toList();
-    _ref.read(kanbanControllerProvider).updateTask(task);
+  Future<void> updateTask(TaskModel task) async {
+    state = AsyncData(
+        state.valueOrNull?.map((t) => t.id == task.id ? task : t).toList() ??
+            []);
+    await ref.read(kanbanControllerProvider).updateTask(task);
   }
 
-  void deleteTask(String taskId) {
-    state = state.where((t) => t.id != taskId).toList();
-    _ref.read(kanbanControllerProvider).deleteTask(taskId);
+  Future<void> deleteTask(String taskId) async {
+    state = AsyncData(
+        state.valueOrNull?.where((t) => t.id != taskId).toList() ?? []);
+    await ref.read(kanbanControllerProvider).deleteTask(taskId);
   }
 
-  void uploadAttachments(String taskId, List<File> files) {
-    _ref.read(kanbanControllerProvider).uploadAttachments(taskId, files);
+  Future<void> uploadAttachments(String taskId, List<File> files) async {
+    await ref.read(kanbanControllerProvider).uploadAttachments(taskId, files);
   }
 }

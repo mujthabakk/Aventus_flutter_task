@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:kanban_board/features/kanban/providers/auth_provider.dart';
 import 'package:kanban_board/features/kanban/providers/kanban_provider.dart';
 import 'dart:io';
 import '../../../core/models/task_model.dart';
@@ -21,7 +20,7 @@ class _TaskDialogState extends ConsumerState<TaskDialog> {
   late TextEditingController _descriptionController;
   late String _status;
   late String _assignedTo;
-  final List<File> _attachments = [];
+  List<File> _attachments = [];
 
   @override
   void initState() {
@@ -31,6 +30,8 @@ class _TaskDialogState extends ConsumerState<TaskDialog> {
         TextEditingController(text: widget.task?.description ?? '');
     _status = widget.task?.status ?? 'To Do';
     _assignedTo = widget.task?.assignedTo ?? '';
+    _attachments =
+        widget.task?.attachments.map((url) => File(url)).toList() ?? [];
   }
 
   @override
@@ -55,7 +56,7 @@ class _TaskDialogState extends ConsumerState<TaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final authController = ref.read(authControllerProvider);
+    final firebaseService = ref.read(firebaseServiceProvider);
 
     return AlertDialog(
       title: Text(widget.task == null ? 'New Task' : 'Edit Task'),
@@ -111,25 +112,6 @@ class _TaskDialogState extends ConsumerState<TaskDialog> {
                           ))
                       .toList(),
                 ),
-              if (widget.task?.attachments.isNotEmpty ?? false)
-                Column(
-                  children: widget.task!.attachments
-                      .map((url) => ListTile(
-                            title: Text(url.split('/').last),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () async {
-                                await ref
-                                    .read(kanbanControllerProvider)
-                                    .deleteTask(widget.task!.id);
-                                setState(() {
-                                  widget.task!.attachments.remove(url);
-                                });
-                              },
-                            ),
-                          ))
-                      .toList(),
-                ),
             ],
           ),
         ),
@@ -137,9 +119,11 @@ class _TaskDialogState extends ConsumerState<TaskDialog> {
       actions: [
         if (widget.task != null)
           TextButton(
-            onPressed: () {
-              ref.read(tasksProvider.notifier).deleteTask(widget.task!.id);
-              Navigator.pop(context);
+            onPressed: () async {
+              await ref
+                  .read(tasksControllerProvider.notifier)
+                  .deleteTask(widget.task!.id);
+              if (mounted) Navigator.pop(context);
             },
             child: const Text('Delete'),
           ),
@@ -157,20 +141,22 @@ class _TaskDialogState extends ConsumerState<TaskDialog> {
                 status: _status,
                 assignedTo: _assignedTo,
                 updatedAt: DateTime.now(),
-                updatedBy: authController.currentUserId ?? '',
+                updatedBy: firebaseService.currentUserId ?? '',
                 attachments: widget.task?.attachments ?? [],
               );
               if (widget.task == null) {
-                ref.read(tasksProvider.notifier).addTask(task);
+                await ref.read(tasksControllerProvider.notifier).addTask(task);
               } else {
-                ref.read(tasksProvider.notifier).updateTask(task);
+                await ref
+                    .read(tasksControllerProvider.notifier)
+                    .updateTask(task);
               }
               if (_attachments.isNotEmpty) {
-                ref
-                    .read(tasksProvider.notifier)
+                await ref
+                    .read(tasksControllerProvider.notifier)
                     .uploadAttachments(task.id, _attachments);
               }
-              Navigator.pop(context);
+              if (mounted) Navigator.pop(context);
             }
           },
           child: const Text('Save'),

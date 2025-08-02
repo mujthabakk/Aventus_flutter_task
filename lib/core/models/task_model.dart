@@ -1,6 +1,3 @@
-import 'package:intl/intl.dart';
-import 'dart:convert';
-
 class TaskModel {
   final String id;
   final String title;
@@ -11,7 +8,7 @@ class TaskModel {
   final String updatedBy;
   final List<String> attachments;
   final bool isSynced;
-  final String? pendingAction; // Add pendingAction field
+  final String? pendingAction;
 
   TaskModel({
     required this.id,
@@ -23,7 +20,7 @@ class TaskModel {
     required this.updatedBy,
     this.attachments = const [],
     this.isSynced = false,
-    this.pendingAction, // Nullable, as it’s only used for local storage
+    this.pendingAction,
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -37,7 +34,7 @@ class TaskModel {
       updatedBy: json['updatedBy'],
       attachments: List<String>.from(json['attachments'] ?? []),
       isSynced: json['isSynced'] == 1,
-      pendingAction: json['pendingAction'], // Handle pendingAction from SQLite
+      pendingAction: json['pendingAction'],
     );
   }
 
@@ -52,7 +49,7 @@ class TaskModel {
       'updatedBy': updatedBy,
       'attachments': attachments,
       'isSynced': isSynced ? 1 : 0,
-      'pendingAction': pendingAction, // Include pendingAction in JSON
+      'pendingAction': pendingAction,
     };
   }
 }

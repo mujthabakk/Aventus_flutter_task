@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/services/firebase_service.dart';
+import '../../../core/services/firebase_service.dart';
 
 class AuthController {
   final FirebaseService _firebaseService;
