@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanban_board/features/kanban/providers/kanban_provider.dart';
 import 'package:kanban_board/features/kanban/task_dialog.dart';
-import 'package:kanban_board/utils/extensions.dart';
 import '../../../core/models/task_model.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class KanbanBoardScreen extends ConsumerStatefulWidget {
   const KanbanBoardScreen({super.key});
@@ -15,14 +15,23 @@ class KanbanBoardScreen extends ConsumerStatefulWidget {
 class _KanbanBoardScreenState extends ConsumerState<KanbanBoardScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  bool _isAddingTask = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // Trigger initial sync to ensure tasks are loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(kanbanControllerProvider).syncTasks();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await ref.read(kanbanControllerProvider).syncTasks();
+        await ref.read(kanbanControllerProvider).syncUploads();
+      } catch (e) {
+        Fluttertoast.showToast(
+          msg: 'Initialization failed: $e',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
     });
   }
 
@@ -89,21 +98,32 @@ class _KanbanBoardScreenState extends ConsumerState<KanbanBoardScreen>
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => showDialog(
-                  context: context,
-                  builder: (_) => const TaskDialog(),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                onTap: _isAddingTask
+                    ? null
+                    : () async {
+                        setState(() => _isAddingTask = true);
+                        await showDialog(
+                          context: context,
+                          builder: (_) => const TaskDialog(),
+                        );
+                        setState(() => _isAddingTask = false);
+                      },
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
+                      Icon(
+                        Icons.add_rounded,
+                        color: _isAddingTask ? Colors.grey : Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         'Add Task',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: _isAddingTask ? Colors.grey : Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),

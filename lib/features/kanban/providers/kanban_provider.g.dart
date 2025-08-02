@@ -6,7 +6,7 @@ part of 'kanban_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tasksControllerHash() => r'8c650dcfe6b67e6c79d8d0b8962e675e12e127a9';
+String _$tasksControllerHash() => r'8f5cdf012d3c1180151633b6f38cf5f4355df87b';
 
 /// See also [TasksController].
 @ProviderFor(TasksController)

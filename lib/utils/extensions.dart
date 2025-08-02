@@ -17,7 +17,6 @@ extension TaskModelCopyWith on TaskModel {
       title: title ?? this.title,
       description: description ?? this.description,
       status: status ?? this.status,
-      assignedTo: assignedTo ?? this.assignedTo,
       updatedAt: updatedAt ?? this.updatedAt,
       updatedBy: updatedBy ?? this.updatedBy,
       attachments: attachments ?? this.attachments,

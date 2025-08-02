@@ -3,38 +3,45 @@ class TaskModel {
   final String title;
   final String description;
   final String status;
-  final String assignedTo;
   final DateTime updatedAt;
   final String updatedBy;
   final List<String> attachments;
   final bool isSynced;
-  final String? pendingAction;
+  final String pendingAction;
 
   TaskModel({
     required this.id,
     required this.title,
     required this.description,
     required this.status,
-    required this.assignedTo,
     required this.updatedAt,
     required this.updatedBy,
     this.attachments = const [],
     this.isSynced = false,
-    this.pendingAction,
+    this.pendingAction = '',
   });
 
-  factory TaskModel.fromJson(Map<String, dynamic> json) {
+  TaskModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? status,
+    DateTime? updatedAt,
+    String? updatedBy,
+    List<String>? attachments,
+    bool? isSynced,
+    String? pendingAction,
+  }) {
     return TaskModel(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      status: json['status'],
-      assignedTo: json['assignedTo'],
-      updatedAt: DateTime.parse(json['updatedAt']),
-      updatedBy: json['updatedBy'],
-      attachments: List<String>.from(json['attachments'] ?? []),
-      isSynced: json['isSynced'] == 1,
-      pendingAction: json['pendingAction'],
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      updatedAt: updatedAt ?? this.updatedAt,
+      updatedBy: updatedBy ?? this.updatedBy,
+      attachments: attachments ?? this.attachments,
+      isSynced: isSynced ?? this.isSynced,
+      pendingAction: pendingAction ?? this.pendingAction,
     );
   }
 
@@ -44,12 +51,26 @@ class TaskModel {
       'title': title,
       'description': description,
       'status': status,
-      'assignedTo': assignedTo,
       'updatedAt': updatedAt.toIso8601String(),
       'updatedBy': updatedBy,
       'attachments': attachments,
-      'isSynced': isSynced ? 1 : 0,
+      'isSynced': isSynced,
       'pendingAction': pendingAction,
     };
+  }
+
+  factory TaskModel.fromJson(Map<String, dynamic> json) {
+    return TaskModel(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      status: json['status'] ?? '',
+      updatedAt:
+          DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      updatedBy: json['updatedBy'] ?? '',
+      attachments: List<String>.from(json['attachments'] ?? []),
+      isSynced: json['isSynced'] ?? false,
+      pendingAction: json['pendingAction'] ?? '',
+    );
   }
 }
