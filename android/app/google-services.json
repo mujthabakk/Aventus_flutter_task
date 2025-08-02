@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "26667134739",
+    "project_id": "test-db8ea",
+    "storage_bucket": "test-db8ea.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26667134739:android:16fcfdd392f1529d45b4e6",
+        "android_client_info": {
+          "package_name": "com.example.aventus_flutter_task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHCqmt6pIspxglMaXBNVej8xe7KZHCoqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
